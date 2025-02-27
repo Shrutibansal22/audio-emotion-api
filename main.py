@@ -1,25 +1,35 @@
-from fastapi import FastAPI, File, UploadFile
+from flask import Flask, request, jsonify
 import torch
 from transformers import pipeline
 
-app = FastAPI()
+app = Flask(__name__)
 
 # Load Hugging Face model
-classifier = pipeline("audio-classification", model="Pragnakalp/audio-emotion")
+classifier = pipeline("audio-classification", model="ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
 
-@app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    # Save uploaded file temporarily
-    with open(file.filename, "wb") as buffer:
-        buffer.write(await file.read())
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files["file"]
+
+    # Save the file temporarily
+    file_path = f"C:\Users\Lenovo\Downloads\sad.wav"
+    file.save(file_path)
 
     # Run inference
-    results = classifier(file.filename)
+    results = classifier(file_path)
 
     # Return the highest scoring emotion
-    return {"prediction": max(results, key=lambda x: x["score"])}
+    prediction = max(results, key=lambda x: x["score"])
 
-# Root endpoint
-@app.get("/")
+    return jsonify({"prediction": prediction})
+
+@app.route("/", methods=["GET"])
 def home():
-    return {"message": "Audio Emotion Recognition API"}
+    return jsonify({"message": "Audio Emotion Recognition API"})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
