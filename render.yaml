@@ -1,0 +1,8 @@
+services:
+  - name: audio-emotion-api
+    type: web
+    env: python
+    repo: https://github.com/your-username/audio-emotion-api
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "./start.sh"
